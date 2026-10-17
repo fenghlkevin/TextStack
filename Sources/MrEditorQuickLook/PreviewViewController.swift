@@ -10,6 +10,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
     private let resources = MarkdownPreviewResources()
     private let images = MarkdownAssetHandler()
     private let bridge = QuickLookRendererBridge()
+    private let searchHint = NSTextField(wrappingLabelWithString: "")
     private var web: WKWebView!
     private var status: NSTextField!
     private var sourceScroll: NSScrollView!
@@ -94,6 +95,22 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         web.allowsMagnification = true
         root.addSubview(web)
         setupToolbar(in: root)
+        // Quick Look's remote host does not deliver typing to preview controls.
+        // Offer an honest app handoff instead of an input that cannot accept text.
+        let searchButton = NSButton(title: label("在 TextStack 中搜索", "Search in TextStack"), target: self, action: #selector(openSearch))
+        searchButton.bezelStyle = .rounded
+        searchHint.font = .systemFont(ofSize: 11)
+        searchHint.textColor = .secondaryLabelColor
+        let searchRow = NSStackView(views: [searchButton, searchHint])
+        searchRow.spacing = 8
+        searchRow.translatesAutoresizingMaskIntoConstraints = false
+        root.addSubview(searchRow)
+        NSLayoutConstraint.activate([
+            searchRow.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 16),
+            searchRow.topAnchor.constraint(equalTo: root.topAnchor, constant: 8),
+            searchRow.trailingAnchor.constraint(lessThanOrEqualTo: root.trailingAnchor, constant: -420),
+            searchRow.heightAnchor.constraint(lessThanOrEqualToConstant: 34)
+        ])
 
         status = NSTextField(wrappingLabelWithString: "TextStack · Preview")
         status.textColor = .secondaryLabelColor
@@ -115,6 +132,7 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         revision += 1
         source = nil
         sourceText.string = ""
+        searchHint.stringValue = ""
 
         if ready { web.evaluateJavaScript("window.mrPreview.cancel(); document.getElementById('markdown-preview').replaceChildren()", completionHandler: nil) }
         stopScope()
@@ -203,6 +221,25 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
         sourceButton = button("doc.text", "查看源码", "Show source", #selector(toggleSource))
         themeButton = button("circle.lefthalf.filled", "主题：跟随系统", "Theme: System", #selector(toggleTheme))
         _ = button("gearshape", "预览设置", "Preview settings", #selector(showPreviewSettings(_:)))
+    }
+
+    @objc private func openSearch() {
+        guard let file = scopedURL else { return }
+        var link = URLComponents()
+        link.scheme = "mreditor"
+        link.host = "preview-search"
+        link.queryItems = [URLQueryItem(name: "file", value: file.absoluteString)]
+        guard let url = link.url else { return }
+        searchHint.stringValue = label("若未跳转，请点顶部“通过 TextStack 打开”，再点击预览搜索框。", "If opening is blocked, use Open with TextStack above, then click preview search.")
+        extensionContext?.open(url) { [weak self] opened in
+            guard !opened else { return }
+            DispatchQueue.main.async {
+                guard let self else { return }
+                // Launch Services may deny this in the Quick Look sandbox; keep
+                // the system-provided Open With route visible when it does.
+                NSWorkspace.shared.open([url], withApplicationAt: URL(fileURLWithPath: "/Applications/TextStack.app"), configuration: NSWorkspace.OpenConfiguration()) { _, _ in }
+            }
+        }
     }
 
     @objc private func toggleSource() {
@@ -323,9 +360,8 @@ final class PreviewViewController: NSViewController, QLPreviewingController, WKN
 private final class QuickLookRendererBridge: NSObject, WKScriptMessageHandler {
     var onReady: (() -> Void)?
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-        guard message.frameInfo.isMainFrame, message.frameInfo.request.url == MarkdownPreviewResources.indexURL,
-              message.body as? String == "ready" else { return }
-        onReady?()
+        guard message.frameInfo.isMainFrame, message.frameInfo.request.url == MarkdownPreviewResources.indexURL else { return }
+        if message.body as? String == "ready" { onReady?() }
     }
 }
 

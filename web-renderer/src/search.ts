@@ -4,9 +4,10 @@ export function installSearch(output: HTMLElement) {
     const count = document.createElement('span'); count.className = 'search-count'; count.setAttribute('role','status');
     let marks: HTMLElement[] = [], current = -1, timer: ReturnType<typeof setTimeout>;
     function clear() { output.querySelectorAll('mark[data-preview-search]').forEach(m=>m.replaceWith(document.createTextNode(m.textContent ?? ''))); output.normalize(); marks=[]; current=-1; }
-    function select(offset: number) { if(!marks.length) return; marks[current]?.classList.remove('current-match'); current=(current+offset+marks.length)%marks.length; marks[current].classList.add('current-match'); marks[current].scrollIntoView({block:'center'}); count.textContent=`${current+1} / ${marks.length}${marks.length===2000?'+':''}`; }
+    let pendingSearch = false;
+    function select(offset: number) { if (pendingSearch) { clearTimeout(timer); pendingSearch = false; search(false); } if(!marks.length) return; marks[current]?.classList.remove('current-match'); current=current < 0 ? (offset < 0 ? marks.length - 1 : 0) : (current+offset+marks.length)%marks.length; marks[current].classList.add('current-match'); marks[current].scrollIntoView({block:'center'}); count.textContent=`${current+1} / ${marks.length}${marks.length===2000?'+':''}`; }
     function search(scroll=true) {
-        clear(); const q=field.value.toLocaleLowerCase(); if(!q) {count.textContent=''; return;}
+        pendingSearch = false; clear(); const q=field.value.toLocaleLowerCase(); if(!q) {count.textContent=''; return;}
         output.querySelectorAll('details').forEach(d=>d.open=true);
         const walker=document.createTreeWalker(output,NodeFilter.SHOW_TEXT); const nodes: Text[]=[]; let n: Node|null;
         while((n=walker.nextNode())) { const t=n as Text; if(!t.parentElement?.closest('button, input, .line-numbers, [aria-hidden="true"]')) nodes.push(t); }
@@ -18,7 +19,7 @@ export function installSearch(output: HTMLElement) {
         b.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
         b.onclick = action; return b;
     }
-    field.oninput=()=>{clearTimeout(timer);timer=setTimeout(()=>search(),120);};
+    field.oninput=()=>{clearTimeout(timer);pendingSearch=true;timer=setTimeout(()=>search(),120);};
     field.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();select(e.shiftKey?-1:1);} if(e.key==='Escape'){field.value='';clear();count.textContent='';field.blur();e.stopPropagation();}};
     const box = document.createElement('div'); box.className = 'search-field';
     const icon = document.createElement('span'); icon.className = 'search-symbol'; icon.setAttribute('aria-hidden','true');

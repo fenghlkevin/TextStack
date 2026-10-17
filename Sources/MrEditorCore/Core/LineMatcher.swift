@@ -68,7 +68,8 @@ public struct LineMatcher {
             if encoding == .utf8 {
                 termBytes = folded.map { Array($0.utf8) }
                 useByteSearch = true
-            } else if caseSensitive || !terms.contains(where: Self.hasNonASCIICase),
+            } else if encoding != .gb18030,
+                      caseSensitive || !terms.contains(where: Self.hasNonASCIICase),
                       let encoded = Self.encode(folded, to: encoding) {
                 termBytes = encoded
                 useByteSearch = true
@@ -213,7 +214,7 @@ public struct LineMatcher {
             if b == 0x8F { return 3 }                       // 補助漢字
             if b == 0x8E || (b >= 0xA1 && b <= 0xFE) { return 2 }
             return 1
-        case .utf8, .utf16LE, .utf16BE:
+        case .utf8, .utf16LE, .utf16BE, .gb18030:
             return 1
         }
     }

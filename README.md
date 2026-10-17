@@ -1,176 +1,140 @@
+<div align="center">
+
+<img src="art/TextStack.png" width="112" alt="TextStack 图标">
+
 # TextStack
 
-当前源码版本：1.18.0
+**在 Mac 上阅读大日志、检查数据、编辑 Markdown。**
+
+原生 macOS 文本编辑器 · 本地与 SSH 远程日志 · 多格式预览 · 并排比较与合并
+
+[下载最新版本](https://github.com/fenghlkevin/TextStack/releases/latest) · [图文使用手册](docs/user-guide.md) · [反馈问题](https://github.com/fenghlkevin/TextStack/issues)
 
 **简体中文** | [English](README.en.md) | [日本語（历史版本）](README.ja.md)
 
-**面向日志、结构化数据和 Markdown 的 macOS 原生编辑器。**
+</div>
 
-打开大文件、筛选日志、检查 JSON 和表格、对比文本，也能一边编辑 Markdown，一边查看公式和流程图。TextStack 将本地文件与 SSH 远程日志放在同一个工作区，提供简体中文、英文和日文界面。
+![日志、CSV、JSON 与差异比较四种工作场景](docs/img/four-kinds-of-text.jpg)
 
-## 截图与演示
+> 截图来自项目已有版本，部分窗口仍显示旧名 MrEditor；当前产品统一为 TextStack。截图用于展示功能，实际界面以安装版本为准。
 
-![日志、CSV、JSON 和差异比较四种工作场景](docs/img/four-kinds-of-text.jpg)
+## 为什么使用 TextStack
 
-*工作场景概览：日志阅读、CSV 列对齐、JSON 格式化和逐字符差异比较。此图为项目已有版本截图，当前界面以实际构建为准。*
+从数 GB 的日志里找出错误，展开接口返回的 JSON，核对 CSV 数据，再对比两份配置。TextStack 把这些日常操作放进同一个原生工作区，支持简体中文、英文和日文界面。
 
-[![打开 10 GB 日志的实时操作动图，点击查看完整视频](docs/img/10gb-open.gif)](docs/media/mreditor-10gb.mp4)
+| 你要做的事 | TextStack 提供的工具 |
+| --- | --- |
+| 排查大型日志 | 大文件读取、后台全文搜索、正则、匹配行筛选、上下文和末尾跟随 |
+| 分析异常时段 | 时间轴、级别统计、时间范围和字段精确筛选、结果导出 |
+| 检查结构化数据 | JSON 树、CSV/TSV 表格、NDJSON 记录浏览、格式化与数据清洗 |
+| 编写技术文档 | Markdown 实时预览、公式、Mermaid、目录，以及 HTML/PDF/PNG 导出 |
+| 核对配置变更 | 并排行级与字符级差异、手动编辑与采纳差异、独立保存合并结果 |
+| 阅读服务器日志 | SSH 连接管理、远程目录、服务器侧过滤、跟随与重连 |
 
-**[▶ 播放或下载完整演示视频（MP4，约 27 秒）](docs/media/mreditor-10gb.mp4)** · 打开 10 GB 日志、滚动阅读并跳转到末行。动图展示前 10 秒；素材来自原项目 1.14.0，非本次构建的性能测试。
+## 功能截图
 
-## 最近更新
+### 大文件与日志搜索
 
-- **多格式分栏预览**：Markdown、JSON、YAML、CSV、TSV、代码、日志、Mermaid、HTML 和 SVG；支持预览内搜索。
-- **Markdown 增强**：代码高亮、KaTeX 公式、Mermaid 图表、可点击目录、表格、任务列表、脚注、GitHub Alerts 和 YAML frontmatter。
-- **Finder 快速查看**：内置 Quick Look 扩展，提供源码/预览切换、搜索、缩放、主题与重新加载。
-- **数据检查器**：JSON 树和格式化副本、CSV/TSV 原生表格、NDJSON 记录浏览与导出。
-- **编辑与搜索**：多光标、矩形列选择、查找全部和可勾选的替换预览。
-- **远程工作区**：独立 SSH 连接管理、远程目录选择、跳板机、Keychain 凭据存储，以及本地/服务器侧边栏分区。
-- **中文体验**：简体中文界面、语言匹配改进，以及更清晰的空白页操作入口。
+使用内存映射、稀疏行索引与可见行绘制读取大文件，配合增量编辑结构处理修改。支持正则、大小写、多词 AND 查询和只显示匹配行；筛选结果保留原始行号，并可展开上下文。
 
-## 功能
+![大型日志全文搜索与匹配高亮](docs/img/search-10gb-dark.png)
 
-### 日志排查与批量处理工具
+- 行号跳转、书签、ANSI 日志颜色、自动换行和实时跟随。
+- 时间轴与 ERROR/FATAL、WARN 统计；按时间范围或字段值筛选并导出完整结果。
+- UTF-8、UTF-16、GB18030/GBK、Shift-JIS、EUC-JP 编码支持，以及字符和换行检查。
+- gzip/zip 自动识别；支持命令行文件参数和标准输入。
 
-- **目录搜索与替换**：编辑菜单或 `⇧⌘F`，递归扫描目录，支持正则、大小写和扩展名过滤；按匹配项勾选替换，双击定位源文件。替换前检查原文并备份到 `~/Library/Application Support/TextStack/ReplacementBackups/`，备份目录含原文件路径清单。已打开文档使用搜索栏“全部已打开文件”的替换预览。
-- **日志时间轴与字段筛选**：格式菜单，按分钟、小时或天显示记录数和 ERROR/FATAL、WARN 分布；支持时间范围、时区、Syslog 起始年份，以及 `level`、`service`、`thread`、`traceId` 和自定义字段的精确匹配。识别 JSON 日志、key=value / key:value 和常见文本级别；保留匹配事件的堆栈续行，可导出完整结果。
-- **SSH 排查增强**：远程窗格提供重连 / 刷新、独立窗口并排查看、已加载日志分析；可选择跟随中断后最多三次自动重连。服务器支持 `tail -F` 时跟随日志轮转，否则显示能力限制。轮转跟随时新行不标注推算行号；实时窗口最多保留 20000 行。重连重新读取末尾，不承诺补齐断线期间的全部日志。
-- **字符与编码检查器**：格式菜单，检查选区或当前文档，显示 LF/CRLF/CR 数量、混合换行、不可见与控制字符的 Unicode 码点和位置，以及无法用目标编码保存的字符。
-- **Markdown 导出**：格式菜单，使用独立内容快照预览；导出带内嵌样式、字体和本地图片的 HTML、A4 分页 PDF 或完整 PNG 长图。公式、语法高亮和 Mermaid 沿用内置渲染器。
+[查看 10 GB 日志演示](docs/media/mreditor-10gb.mp4)。该视频来自历史版本，实际速度取决于硬件、文件内容和操作，不作为当前版本的性能承诺。
 
-详细范围、容量限制和备份恢复方法见 [排查工具说明](docs/investigation-tools.md)。
+### JSON、CSV 与记录检查
+
+源码之外，使用结构化视图阅读嵌套对象与表格，减少在密集文本中逐字符核对的工作。
+
+![JSON 原文与结构化展示](docs/img/json_structured_before_after.png)
+
+![CSV 原文与列对齐展示](docs/img/csv_structured_before_after.png)
+
+- **JSON**：折叠树、节点定位、分页加载；格式化生成新文档，保留键顺序、重复键与数字原始写法。
+- **CSV/TSV**：表头开关、列宽和列顺序调整、记录过滤、单元格详情及宽表分页。
+- **NDJSON**：逐条查看记录，也可导出为 JSON 数组。
+- **数据清洗**：去空白、处理空值、类型转换与按列去重，导出到独立文件。
 
 ### Markdown 与多格式预览
 
+在源码旁查看渲染结果，支持双向比例滚动同步、浅色和深色外观。内置渲染器、字体和样式，普通预览无需联网。
+
 ![Markdown 预览：代码高亮、公式、Mermaid、提示块与表格](docs/img/markdown-preview.png)
 
-*当前渲染器的真实 WebKit 测试截图（2026-09-30），展示预览内容区域。*
-
-从工具栏的**显示方式 → 预览**打开分栏视图；Markdown 文件可自动显示实时预览。源码与预览按滚动比例双向同步，支持浅色和深色外观。渲染器、字体和样式随应用打包，普通预览无需联网。
+*此图为项目渲染器的真实 WebKit 测试截图，展示预览内容区域。*
 
 | 格式 | 预览能力 |
 | --- | --- |
-| Markdown | CommonMark/GFM、代码高亮、公式、流程图、目录、任务列表与脚注 |
-| JSON / YAML | 可折叠树、全部展开/折叠、解析错误提示、源码切换 |
-| CSV / TSV | 表头固定、列宽调整、点击排序、文本过滤，支持带引号与多行字段 |
-| 代码 / 配置 / 日志 | 已注册语言高亮、行号、换行、搜索、ERROR/FATAL/WARN 着色 |
-| Mermaid | 直接渲染 `.mmd` / `.mermaid` 图表 |
-| HTML / SVG | 清理后的文档结构与矢量图预览 |
+| Markdown | CommonMark/GFM、语法高亮、KaTeX、Mermaid、目录、任务列表、脚注、GitHub Alerts |
+| JSON / YAML | 可折叠树、全部展开与折叠、解析错误提示 |
+| CSV / TSV | 固定表头、列宽调整、排序和文本过滤 |
+| 代码 / 配置 / 日志 | 语言高亮、行号、搜索和日志级别着色 |
+| Mermaid / HTML / SVG | 图表、清理后的文档与矢量图预览 |
 
-HTML/SVG 预览会移除脚本、样式与外部资源，不能代替浏览器还原完整网页。远程图片被阻止，本地图片访问限定在文档目录。编辑器分栏预览面向不超过 **8 MiB** 的文件；更大文件继续使用大文件编辑器。表格与文本预览还有行数、列数和字符数限制，达到上限会显示提示；预览搜索只针对已渲染内容，最多高亮 2,000 处。
+Markdown 可导出带内嵌资源的 HTML、分页 PDF 和 PNG 长图。应用还包含 Finder Quick Look 扩展；启用后选中文件按空格查看，最终提供程序由 Finder 决定。
 
-用 [Markdown 示例](docs/markdown-preview-demo.md) 和 [多格式示例](docs/preview-samples/) 体验；完整范围见 [预览说明](docs/markdown-preview.md)。
+### 并排比较与合并
 
-### Finder 快速查看
-
-安装并启动应用后，在系统设置的 **通用 → 登录项与扩展 → 扩展 → 快速查看** 中启用 MrEditor（名称随 macOS 版本可能不同），选中文件后按空格。
-
-扩展支持重新加载、50%–250% 缩放、源码/预览切换和系统/浅色/深色主题。齿轮菜单可设置“双击预览打开文件”，默认关闭。
-
-Finder 决定最终使用哪个预览提供程序：已有测试中 Markdown、JSON、日志使用 MrEditor，而 CSV、SVG 仍可能由系统接管。这些格式在应用内可正常使用新预览。Quick Look 最多读取 **4 MiB**，超限有截断提示；支持 UTF-8 和带 BOM 的 UTF-16，本地图片还受宿主沙箱限制。
-
-### JSON、CSV、TSV 与 NDJSON 检查器
-
-从**显示方式**选择对应数据视图，在源码旁查看结构。此原生检查器与通用 Web 预览是不同入口。
-
-- **JSON**：后台解析、折叠树、每页 500 个子节点；选择节点可定位源码。格式化生成新文档，保留键顺序、重复键和数字原始写法。大 UTF-8 文件采用内存映射与流式格式化，解析前需先保存大文件的待提交修改。
-- **CSV / TSV**：首行作为表头开关、调整与重排列、记录过滤和单元格详情；支持引号内分隔符、转义引号和多行字段，列按每组 100 列分页。
-- **NDJSON**：按记录浏览 JSON 树；“格式化全部”将记录导出为新的 JSON 数组文件。错误记录会提示序号，导出遇错停止并清理部分输出。
-
-### 大文件与日志
-
-使用 `mmap`、稀疏行索引和仅绘制可见行的视图读取大文件；大文件编辑通过 piece table 保存修改，不需要将全文加载进文本控件。项目已有 10 GB 日志演示，实际速度取决于硬件、文件内容及操作。
-
-- 全文件后台搜索、大小写开关、正则表达式、多词 AND 查询。
-- **实时 grep**：只显示匹配行，保留真实行号，并用 `±` 添加上下文。
-- **跟随末尾**：增量追踪追加内容；本地文件有未保存修改时暂停，保存后恢复。
-- UTF-8、Shift-JIS、EUC-JP 编码检测与保存转换；原子保存、另存为和恢复已保存版本。
-- 书签、跳转行、ANSI 日志颜色、自动换行、字体与主题设置。
-- gzip/zip 自动识别与展开；命令行标准输入在读取完毕后打开。
-
-![大文件搜索与匹配高亮](docs/img/search-10gb-dark.png)
-
-*已有版本的大文件搜索截图。筛选视图为只读，保存仍写入完整文档。*
-
-### 多光标、列模式与替换预览
-
-在小文件编辑窗格中，使用 `⌘` 点击或 `⌥⌘↑ / ↓` 添加光标，`⌘D` 选择下一个相同文本。通过 **编辑 → 列模式**（`⇧⌥⌘C`）拖出矩形选区，同时编辑多行；短行停在行尾，`Esc` 退出列模式。
-
-搜索栏支持使用选区搜索、查找全部、替换和全部替换。**预览修改**最多列出 500 项，可勾选要应用的替换；文档变化后需重新生成预览。格式化或只读视图中的替换能力受限。
-
-### 时间范围筛选与 CSV / TSV 数据清洗
-
-从 **格式 → 时间范围筛选…** 或 **格式 → CSV / TSV 数据清洗…** 打开工具窗口，后台生成预览，再通过“导出完整结果”保存并打开新文件。
-
-- **时间筛选**：起止时间均包含边界，可只填一端；支持毫秒、ISO 自带时区、Apache/nginx、syslog、Unix 秒与毫秒。无时区时间使用窗口内指定的 UTC 偏移；syslog 可指定起始年份，并按顺序识别跨年。可保留匹配记录的堆栈续行；开头无时间戳内容不保留。自动检测读取前 1 MiB / 1000 行，检测失败可手动选格式。
-- **数据清洗**：选择 CSV/TSV 分隔符和表头，可按列去空白、填充空值或删除含空值记录、转换整数/十进制/布尔值，并按指定列去重保留第一条。列号从 1 开始，留空作用于全部列；表头不参与处理。支持引号、多行字段和转义引号；转换失败显示记录及列，清理部分输出。
-- 两个工具均支持取消，预览最多 64 KiB，导出完整结果为 UTF-8，禁止覆盖源文件。首次预览读取文件，未保存修改由打开窗口时的内容快照提供；更改源文档后请重新打开工具。当前支持本地文档，非 UTF-8 文件转换上限为 64 MiB；去重键设有 128 MiB / 100 万条内存保护上限。
-
-### SSH 远程日志
-
-通过 **文件 → 打开远程…**（`⌃⌘O`）、首页入口或服务器侧边栏连接。
-
-- 快速连接或保存配置；支持密码、私钥、加密私钥、SSH Agent 和独立认证的跳板机。
-- 远程目录浏览、文件名过滤、按修改时间排序、刷新与复用连接选择其他文件。
-- 按需读取日志片段，在服务器端过滤，并通过 `tail -f` 跟随追加内容。
-- 凭据仅在选择记住时存入 macOS Keychain；首次连接确认真实主机指纹，主机密钥变化时拒绝连接。
-- 新连接使用应用生成的 SSH 配置，不依赖 `~/.ssh/config`。
-
-远程窗格用于读取、过滤、复制与跟随日志，不提供本地编辑器的全部功能；所需远程命令缺失时会提示能力限制。详见 [SSH 连接说明](docs/SSH_CONNECTIONS.md)。
-
-### 比较与合并
-
-比较两个文件、已打开文档、剪贴板或 HTTPS URL 内容，显示并排的行级与字符级差异。可将左侧差异采纳到右侧结果，再单独保存合并文件；两个原文件不受影响。格式比较用于检查数据形状，开启时禁用合并。
-
-对比完成后自动进入 **并排合并编辑**：左侧原文只读，右侧为可编辑结果。点击差异块中间的 `→` 采纳左侧到右侧，也可直接编辑右侧；编辑、采纳和撤销后会更新行内高亮及曲线连接带。支持同步滚动、行号、代码高亮、差异导航、`⌘Z` 撤销、`⌘S` 另存合并结果、未保存确认和草稿恢复。保存为独立 UTF-8 文件，保留原始换行，不能覆盖任一原文件。编辑支持每侧最多 16 MiB、50,000 行；更大文件继续使用流式按块合并。超过 1 MiB 时省略全文语法着色。未修改结果时可切换格式比较。之前双向版本留下的草稿仍可恢复为普通文本。交互参考 [Rebased](https://github.com/DetachHead/rebased/)，以原生 AppKit 实现。
+比较两个文件、已打开文档、剪贴板或 HTTPS URL 内容，定位行级和字符级变化。
 
 ![并排差异比较](docs/img/diff_vew.png)
 
-*已有版本的差异比较截图。*
+比较后可在右侧编辑合并结果，点击差异块采纳左侧内容，配合同步滚动、差异导航和撤销。合并结果另存为独立文件，保留两个原文件。手动合并编辑支持每侧最多 16 MiB、50,000 行；更大文件使用流式按块合并。
 
-### 工作区与外观
+### 远程工作区与日常编辑
 
-侧边栏切换多文档、关闭文件、区分本地与服务器；恢复会话和未保存的新建草稿。支持 Finder“打开方式”、默认应用设置、打印与 PDF 输出，以及等宽字体、行距、插入符、主题和背景透明度调整。
+- **SSH**：密码、私钥、加密私钥、SSH Agent、跳板机；远程目录浏览、按需读取、服务器侧过滤和跟随。凭据可存入 macOS Keychain，首次连接确认主机指纹。
+- **编辑**：多光标、矩形列选择、查找全部、逐项勾选的替换预览，以及跨目录搜索与替换。
+- **工作区**：本地与服务器分区、多文档切换、会话与未保存草稿恢复、Finder 打开和打印。
+- **外观**：主题、等宽字体、行距、插入符和背景透明度设置。
 
-## 常用快捷键
+## 下载与快速开始
 
-| 操作 | 快捷键 |
-| --- | --- |
-| 新建 / 打开 / 保存 | `⌘N` / `⌘O` / `⌘S` |
-| 另存为 | `⇧⌘S` |
-| 搜索 / 下一处 / 上一处 | `⌘F` / `⌘G` / `⇧⌘G` |
-| 跳转行 / 切换书签 | `⌘L` / `⌘B` |
-| 跟随文件末尾 | `⌥⌘F` |
-| 打开远程文件 | `⌃⌘O` |
-| 比较两个文件 | `⇧⌘D` |
-| 上一处 / 下一处差异 | `⇧⌘[` / `⇧⌘]` |
-| 列模式 | `⇧⌥⌘C` |
-| 添加上方 / 下方光标 | `⌥⌘↑` / `⌥⌘↓` |
-| 选择下一个相同文本 | `⌘D` |
+要求 **macOS 13 或更新版本**。从 [GitHub Releases](https://github.com/fenghlkevin/TextStack/releases/latest) 下载 DMG，将 `TextStack.app` 拖入 Applications 后打开。每次发布的处理器架构和签名状态见对应发布说明；本地 ad-hoc 签名包不等于 Apple 公证包。
 
-## 构建与运行
+1. 按 `⌘O` 打开日志、文本、JSON、CSV 或 Markdown，也可以直接拖入文件。
+2. 按 `⌘F` 搜索，启用“仅匹配行”聚焦结果；用 `⌘L` 跳到原始行。
+3. 在“显示方式”选择结构化视图或预览，按 `⇧⌘D` 比较文件。
+4. 使用“格式”菜单分析日志、清洗数据或导出 Markdown。
 
-需要 **macOS 13+**、Swift 5.9 或更新工具链（Xcode 15+），以及打包脚本使用的 Python 3。当前分支包含新增预览等功能，上游发布包不一定包含这些修改；体验本分支请从源码构建。
+完整操作步骤见 [图文使用手册](docs/user-guide.md)，应用内通过 **帮助 → TextStack 功能使用说明** 离线阅读。
+
+## 使用范围
+
+- 编辑器分栏预览面向不超过 **8 MiB** 的文件；Quick Look 最多读取 **4 MiB**，超限会提示截断。大文件继续使用文本编辑器。
+- 表格、树、搜索和工具预览存在各自的显示上限，预览样本不代表全部导出结果；详见各功能文档。
+- HTML/SVG 预览会清理脚本、样式与外部资源；远程图片被阻止，本地图片访问限定在文档目录。
+- SSH 窗格用于阅读、过滤和跟随，分析范围为已加载片段；断线重连不保证补齐全部日志。
+- 跨目录替换会先备份原文件；操作前核对勾选项，恢复方法见 [排查工具说明](docs/investigation-tools.md)。
+
+## 从源码构建
+
+需要 macOS 13+、Swift 5.9+（Xcode 15+）与 Python 3。
 
 ```sh
+git clone https://github.com/fenghlkevin/TextStack.git
+cd TextStack
 swift build -c release
 sh scripts/make_app.sh release
 codesign --verify --deep --strict .build/TextStack.app
 open .build/TextStack.app
 ```
 
-打包脚本会嵌入本地化资源与 Quick Look 扩展、校验预览资源清单并签名。默认是 ad-hoc 本地签名；这不代表 Developer ID 签名或 Apple 公证。
-
-安装到 `/Applications/TextStack.app` 前，正常退出应用并处理未保存文档，将旧应用备份到 `.build/backups/` 下独立目录，再替换并启动新包。
-
-渲染资源已提交到仓库，普通 Swift 构建不需要 Node.js；修改 `web-renderer/` 时需先在具备 Node.js/npm 的环境重建：
+安装到 Applications 并验证启动：
 
 ```sh
-sh scripts/build_markdown_renderer.sh
-swift test --filter 'Markdown(PreviewIntegration|Renderer|Syntax)Tests|EditableViewerMarkdownHighlightTests'
+sh scripts/install_app.sh
 ```
 
-安装可选命令行入口后，可打开文件或传入完整管道输出：
+安装脚本正常退出应用，保留未保存文档确认流程，然后直接替换旧程序并启动，不创建旧程序备份。
+
+预览资源已随仓库提交，普通 Swift 构建无需 Node.js。修改 `web-renderer/` 后先执行 `sh scripts/build_markdown_renderer.sh`。制作 Apple Silicon 与 Intel 通用 DMG 使用 `sh scripts/make_dmg.sh`。
+
+可选命令行入口：
 
 ```sh
 sh scripts/install-cli.sh
@@ -180,17 +144,12 @@ cat /path/to/app.log | mreditor
 
 ## 文档与贡献
 
-- [预览功能、限制与验证](docs/markdown-preview.md)
-- [SSH 连接与集成测试](docs/SSH_CONNECTIONS.md)
-- [初始大文件架构设计](docs/ARCHITECTURE_v0.1.md)
-- [贡献指南](CONTRIBUTING.md)
+- [图文使用手册](docs/user-guide.md) · [预览说明](docs/markdown-preview.md) · [Markdown 示例](docs/markdown-preview-demo.md)
+- [日志与数据排查工具](docs/investigation-tools.md) · [SSH 连接说明](docs/SSH_CONNECTIONS.md)
+- [大文件架构](docs/ARCHITECTURE_v0.1.md) · [贡献指南](CONTRIBUTING.md) · [提交问题](https://github.com/fenghlkevin/TextStack/issues)
 
-## 许可与致谢
+## 开源许可
 
-原始 MrEditor 代码采用 [MIT](LICENSE)，© 2026 TABATA Hitoshi。
+TextStack 基于 MrEditor 持续开发，原始代码采用 [MIT 许可](LICENSE)，© 2026 TABATA Hitoshi。项目目录、部分模块名、命令行入口与历史截图仍保留 MrEditor 名称。
 
-增强预览使用 MrEditor 自有集成实现和允许商业分发的第三方组件。原作者 MIT 声明及依赖许可全文随 `ThirdPartyNotices.txt` 打包；DOMPurify 选择 Apache-2.0 许可。实现来源及历史说明见 [UPSTREAM.md](web-renderer/UPSTREAM.md)。
-
-## 完整功能使用说明
-
-从快速开始到高级功能的 [图文操作手册](docs/user-guide.md) 已随应用离线打包。应用内从 **帮助 → TextStack 功能使用说明** 打开，支持目录跳转与全文查找；[网页版](docs/user-guide/index.html) 可直接本地打开。更新手册后运行 `python3 scripts/build_user_guide.py` 同步离线资源。
+第三方组件许可随应用的 `ThirdPartyNotices.txt` 分发；DOMPurify 选择 Apache-2.0 许可。预览集成来源及依赖说明见 [UPSTREAM.md](web-renderer/UPSTREAM.md)。

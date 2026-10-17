@@ -618,6 +618,13 @@ public final class MainWindowController: NSWindowController, NSWindowDelegate {
     var canShowPreview: Bool { activeViewer?.supportsMarkdownPreview ?? false }
     var menuPreviewVisible: Bool { (activeViewer as? EditableViewer)?.markdownPreviewVisible ?? false }
     var menuPreviewOnly: Bool { (activeViewer as? EditableViewer)?.previewOnly ?? false }
+    func openPreviewSearch(url: URL) {
+        open(url: url)
+        guard activeViewer?.fileURL == url, let viewer = activeViewer as? EditableViewer else { return }
+        closeJSONInspector()
+        viewer.focusPreviewSearch()
+        NSApp.activate(ignoringOtherApps: true)
+    }
     func menuTogglePreview() { guard canShowPreview else { return }; closeJSONInspector(); (activeViewer as? EditableViewer)?.toggleMarkdownPreview() }
     func menuTogglePreviewOnly() { guard canShowPreview else { return }; closeJSONInspector(); activeViewer?.setMarkdownPreviewVisible(true); (activeViewer as? EditableViewer)?.togglePreviewOnly() }
     func showJSONInspector() { presentJSONInspector() }

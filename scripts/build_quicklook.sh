@@ -19,6 +19,7 @@ for ARCH in $(lipo -archs "$BIN"); do
         "$ROOT/Sources/MrEditorQuickLook/PreviewViewController.swift" \
         "$ROOT/Sources/MrEditorCore/UI/MarkdownPreviewResources.swift" \
         "$ROOT/Sources/MrEditorCore/UI/MarkdownAssetHandler.swift" \
+        "$ROOT/Sources/MrEditorCore/Core/EncodingDetector.swift" \
         "$ROOT/Sources/MrEditorCore/Core/QuickLookMarkdownDocument.swift" \
         "$ROOT/Sources/MrEditorCore/Core/DocumentPreviewFormat.swift" \
         -o "$QUICKLOOK_BUILD/MrEditorQuickLook-$ARCH"

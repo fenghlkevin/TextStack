@@ -108,7 +108,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         let c = ensureController()
         c.showWindow(nil)
         for url in urls {
-            if SettingsBundle.isSettingsURL(url) {
+            if url.scheme == "mreditor", url.host == "preview-search" {
+                if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                   let value = components.queryItems?.first(where: { $0.name == "file" })?.value,
+                   let file = URL(string: value), file.isFileURL {
+                    c.openPreviewSearch(url: file)
+                }
+            } else if SettingsBundle.isSettingsURL(url) {
                 // 外観の共有リンク：確認のうえ適用（見た目が黙って変わらないように）。
                 SettingsShare.apply(url: url, presenting: NSApp.keyWindow ?? c.window)
             } else {

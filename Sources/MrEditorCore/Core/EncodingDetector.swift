@@ -1,4 +1,5 @@
 import Foundation
+import CoreFoundation
 
 /// 判定された文字コード。
 public enum DetectedEncoding: Sendable {
@@ -7,6 +8,7 @@ public enum DetectedEncoding: Sendable {
     case utf16BE
     case shiftJIS
     case eucJP
+    case gb18030
 
     public var stringEncoding: String.Encoding {
         switch self {
@@ -15,6 +17,7 @@ public enum DetectedEncoding: Sendable {
         case .utf16BE: return .utf16BigEndian
         case .shiftJIS: return .shiftJIS
         case .eucJP: return .japaneseEUC
+        case .gb18030: return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
         }
     }
 
@@ -25,11 +28,12 @@ public enum DetectedEncoding: Sendable {
         case .utf16BE: return "UTF-16 BE"
         case .shiftJIS: return "Shift-JIS"
         case .eucJP: return "EUC-JP"
+        case .gb18030: return "GB18030 (GBK)"
         }
     }
 
     /// エンコード指定メニューに並べる候補（日本語圏で使う順）。
-    static let selectable: [DetectedEncoding] = [.utf8, .shiftJIS, .eucJP, .utf16LE, .utf16BE]
+    static let selectable: [DetectedEncoding] = [.utf8, .gb18030, .shiftJIS, .eucJP, .utf16LE, .utf16BE]
 }
 
 /// ファイルの改行コード。挿入・貼り付けする改行はこれに揃える（読み込み時に検出）。
@@ -150,7 +154,22 @@ public enum EncodingDetector {
         // 3. Shift-JIS / EUC-JP スコアリング
         let sjis = scoreShiftJIS(bytes)
         let euc = scoreEUCJP(bytes)
-        return sjis >= euc ? .shiftJIS : .eucJP
+        let japanese: DetectedEncoding = sjis >= euc ? .shiftJIS : .eucJP
+        // Chinese legacy files can resemble EUC-JP. Prefer a valid Chinese
+        // decoding when the Japanese candidate is invalid or lacks kana.
+        func decoded(_ encoding: DetectedEncoding) -> String? {
+            for trim in 0...min(3, data.count) {
+                if let text = String(data: data.dropLast(trim), encoding: encoding.stringEncoding) { return text }
+            }
+            return nil
+        }
+        if let chinese = decoded(.gb18030) {
+            let han = chinese.unicodeScalars.filter { (0x4E00...0x9FFF).contains($0.value) }.count
+            let jp = decoded(japanese)
+            let kana = jp?.unicodeScalars.filter { (0x3040...0x30FF).contains($0.value) }.count ?? 0
+            if han > 0 && (jp == nil || kana == 0 || max(sjis, euc) < 0) { return .gb18030 }
+        }
+        return japanese
     }
 
     /// 厳密な UTF-8 妥当性判定。末尾でマルチバイトが切れている場合は許容する。

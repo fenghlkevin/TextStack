@@ -15,6 +15,12 @@ final class EditableViewer: NSView, DocumentPane, NSTextViewDelegate, NSTextStor
     private var markdownSplitConstraints: [NSLayoutConstraint] = []
     private var markdownFullWidth: NSLayoutConstraint?
     private(set) var previewOnly = false
+    func focusPreviewSearch() {
+        setMarkdownPreviewVisible(true)
+        previewOnly = true
+        updateMarkdownPreview()
+        window?.makeFirstResponder(markdownPreview?.toolbar.search)
+    }
     func togglePreviewOnly() {
         previewOnly.toggle()
         updateMarkdownPreview()

@@ -1,4 +1,4 @@
-# MrEditor
+# TextStack
 
 [简体中文](README.md) | **English** | [日本語 (historical version)](README.ja.md)
 
@@ -133,13 +133,13 @@ Requires **macOS 13+**, a Swift 5.9 or newer toolchain (Xcode 15+), and Python 3
 ```sh
 swift build -c release
 sh scripts/make_app.sh release
-codesign --verify --deep --strict .build/MrEditor.app
-open .build/MrEditor.app
+codesign --verify --deep --strict .build/TextStack.app
+open .build/TextStack.app
 ```
 
 Packaging embeds localization resources and the Quick Look extension, validates the preview resource manifest, and signs the bundle. The default is local ad-hoc signing, which does not imply Developer ID signing or Apple notarization.
 
-Before replacing `/Applications/MrEditor.app`, quit normally and resolve unsaved-document prompts. Back up the existing app in a separate directory under `.build/backups/`, then install and launch the new bundle.
+Before replacing `/Applications/TextStack.app`, quit normally and resolve unsaved-document prompts. Replace the old application without creating a backup, then launch the new bundle.
 
 Generated renderer resources are checked in, so ordinary Swift builds do not require Node.js. When changing `web-renderer/`, first rebuild it in an environment with Node.js/npm:
 
