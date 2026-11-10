@@ -824,7 +824,7 @@ final class EditableViewer: NSView, DocumentPane, NSTextViewDelegate, NSTextStor
     /// 表示中の本文を印刷する。改ページ・行の分割は NSTextView に委ねる。
     /// 構造化表示中は整形後の見た目をそのまま刷る（画面と一致させる）。
     func printDocument() {
-        let info = NSPrintInfo.shared
+        let info = NSPrintInfo.shared.copy() as! NSPrintInfo
         info.horizontalPagination = .fit
         info.verticalPagination = .automatic
         info.isHorizontallyCentered = false
@@ -833,7 +833,11 @@ final class EditableViewer: NSView, DocumentPane, NSTextViewDelegate, NSTextStor
         info.topMargin = 36; info.bottomMargin = 36
         info.leftMargin = 36; info.rightMargin = 36
 
-        let op = NSPrintOperation(view: textView, printInfo: info)
+        // Print a separate, paper-width layout. Printing the editor itself scales
+        // its screen width (or unwrapped long lines) down, making type tiny.
+        let printView = Self.makePrintView(from: textView, printInfo: info)
+        let op = NSPrintOperation(view: printView, printInfo: info)
+        op.printPanel.options.insert(.showsScaling)
         op.jobTitle = fileURL?.lastPathComponent ?? L("doc.untitled")
         op.showsPrintPanel = true
         op.showsProgressPanel = true
@@ -842,6 +846,29 @@ final class EditableViewer: NSView, DocumentPane, NSTextViewDelegate, NSTextStor
         } else {
             op.run()
         }
+    }
+
+    static func makePrintView(from source: NSTextView, printInfo: NSPrintInfo) -> NSTextView {
+        let width = max(1, printInfo.paperSize.width - printInfo.leftMargin - printInfo.rightMargin)
+        let view = NSTextView(frame: NSRect(x: 0, y: 0, width: width, height: 1))
+        view.isHorizontallyResizable = false
+        view.isVerticallyResizable = true
+        view.textContainerInset = .zero
+        view.textContainer?.widthTracksTextView = true
+        view.textContainer?.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
+        if let storage = source.textStorage {
+            view.textStorage?.setAttributedString(storage)
+        }
+        // Screen layouts may deliberately disable wrapping; paper must wrap.
+        let range = NSRange(location: 0, length: (view.string as NSString).length)
+        view.textStorage?.enumerateAttribute(.paragraphStyle, in: range) { value, range, _ in
+            let style = (value as? NSParagraphStyle)?.mutableCopy() as? NSMutableParagraphStyle
+                ?? NSMutableParagraphStyle()
+            style.lineBreakMode = .byWordWrapping
+            view.textStorage?.addAttribute(.paragraphStyle, value: style, range: range)
+        }
+        view.sizeToFit()
+        return view
     }
 
     // MARK: - draft（未保存の本文）の読み書き
